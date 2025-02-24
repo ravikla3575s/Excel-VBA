@@ -5,20 +5,28 @@ Sub GetYearMonthFromFixf(fixfFile As String, ByRef targetYear As String, ByRef t
     Dim yearPart As String, monthPart As String
     Dim era As String, westernYear As Integer
     
-    ' ファイルシステムオブジェクトを作成
+    ' **ファイルシステムオブジェクトを作成**
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set ts = fso.OpenTextFile(fixfFile, 1, False, -2) ' UTF-8対応
 
-    ' 最初の数行を読み込んで、調剤年月を取得
+    ' **最初の数行を読み込んで、調剤年月を取得**
     Do While Not ts.AtEndOfStream
         lineText = ts.ReadLine
-        ' GYYMM形式（例: 50406 = 令和4年6月）を探す
+        ' **GYYMM形式（例: 50607 = 令和6年7月）を探す**
         If Len(lineText) >= 5 Then
-            era = Left(lineText, 1) ' 和暦の元号 (1: 明治, 2: 大正, 3: 昭和, 4: 平成, 5: 令和)
-            yearPart = Mid(lineText, 2, 2) ' 2桁の年
-            monthPart = Right(lineText, 2) ' 2桁の月
+            era = Left(lineText, 1) ' **和暦の元号 (1: 明治, 2: 大正, 3: 昭和, 4: 平成, 5: 令和)**
+            yearPart = Mid(lineText, 2, 2) ' **2桁の年**
+            monthPart = Right(lineText, 2) ' **2桁の月**
 
-            ' 和暦を西暦に変換
+            ' **1月の場合は前の年の12月にする**
+            If monthPart = "01" Then
+                monthPart = "12"
+                yearPart = CStr(CInt(yearPart) - 1)
+            Else
+                monthPart = Format(CInt(monthPart) - 1, "00") ' **前月にする**
+            End If
+
+            ' **和暦を西暦に変換**
             Select Case era
                 Case "1": westernYear = 1867 + CInt(yearPart) ' 明治
                 Case "2": westernYear = 1911 + CInt(yearPart) ' 大正
@@ -28,13 +36,13 @@ Sub GetYearMonthFromFixf(fixfFile As String, ByRef targetYear As String, ByRef t
                 Case Else: westernYear = 2000 ' 不明な場合は適当なデフォルト値
             End Select
 
-            ' 取得した年月をセット
+            ' **取得した年月をセット**
             targetYear = CStr(westernYear)
             targetMonth = monthPart
             Exit Do
         End If
     Loop
 
-    ' ファイルを閉じる
+    ' **ファイルを閉じる**
     ts.Close
 End Sub
