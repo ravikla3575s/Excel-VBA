@@ -26,9 +26,9 @@ Sub ProcessCSV()
 
     ' 【5】対象年月の取得（fixfがなくても処理できるように）
     If fixfFile <> "" Then
-        GetYearMonthFromFixf fixfFile, targetYear, targetMonth
+        Call GetYearMonthFromFixf(fixfFile, targetYear, targetMonth)
     Else
-        GetYearMonthFromCSV fso, csvFolder, targetYear, targetMonth
+        Call GetYearMonthFromCSV(fso, csvFolder, targetYear, targetMonth)
     End If
 
     ' 【6】対象Excelファイルを取得 or 作成
@@ -36,10 +36,10 @@ Sub ProcessCSV()
 
     ' 【7】Excelを開き、テンプレート情報を設定
     Set newBook = Workbooks.Open(targetFile)
-    SetTemplateInfo newBook, targetYear, targetMonth
+    SetTemplateInfo(newBook, targetYear, targetMonth)
 
-    ' 【8】フォルダ内のすべてのCSVを処理
-    ProcessAllCSVFiles fso, newBook, csvFolder)
+    ' 【8】フォルダ内のすべてのCSVを処理し、請求確定状況の詳細データを転記
+    ProcessAllCSVFiles(fso, newBook, csvFolder)
 
     ' 【9】保存して閉じる
     newBook.Save
