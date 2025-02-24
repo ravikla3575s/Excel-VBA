@@ -1,8 +1,10 @@
 Sub ProcessCSV()
     Dim csvFolder As String
     Dim fso As Object
-    Dim targetYear As String, targetMonth As String
-    Dim savePath As String, templatePath As String
+    Dim targetYear As String 
+    Dim targetMonth As String
+    Dim savePath As String
+    Dim templatePath As String
     Dim newBook As Workbook
     Dim targetFile As String
     
