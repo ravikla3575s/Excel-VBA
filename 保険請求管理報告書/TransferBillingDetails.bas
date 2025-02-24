@@ -14,7 +14,6 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
     Dim insertRows As Long
 
     ' シート設定
-    Set wsBilling = newBook.Sheets(1) ' メインシート
     Set wsDetails = newBook.Sheets(2) ' 詳細用シート
 
     ' CSVデータの請求先分類
