@@ -46,23 +46,25 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
 
     ' **請求データを Dictionary に格納**
     For i = 2 To lastRowBilling
-        dispensingMonth = wsBilling.Cells(i, 2).Value ' GYYMM形式
-        convertedMonth = ConvertToWesternDate(dispensingMonth)
-        rowData = Array(wsBilling.Cells(i, 4).Value, convertedMonth, _
-                        wsBilling.Cells(i, 5).Value, wsBilling.Cells(i, 10).Value)
+    dispensingMonth = wsBilling.Cells(i, 2).Value ' **GYYMM形式の診療月**
+    convertedMonth = ConvertToWesternDate(dispensingMonth)
+    rowData = Array(wsBilling.Cells(i, 4).Value, convertedMonth, wsBilling.Cells(i, 5).Value, wsBilling.Cells(i, 10).Value)
 
-        ' **CSVの種類で振り分け**
-        If InStr(csvFileName, "fixf") > 0 Then
-            ' fixf → ユーザーに選択させる
-            If ShowRebillSelectionForm(rowData) Then
-                rebillDict.Add wsBilling.Cells(i, 1).Value, rowData ' 返戻再請求
-            Else
-                lateDict.Add wsBilling.Cells(i, 1).Value, rowData ' 月遅れ請求
+        ' **現在処理中の診療月（csvYYMM）と異なる場合のみ追加**
+        If Right(dispensingMonth, 4) <> csvYYMM Then
+            ' **CSVの種類で振り分け**
+            If InStr(csvFileName, "fixf") > 0 Then
+                ' fixf → ユーザーに選択させる
+                If ShowRebillSelectionForm(rowData) Then
+                    rebillDict.Add wsBilling.Cells(i, 1).Value, rowData ' **返戻再請求**
+                Else
+                    lateDict.Add wsBilling.Cells(i, 1).Value, rowData ' **月遅れ請求**
+                End If
+            ElseIf InStr(csvFileName, "zogn") > 0 Then
+                unpaidDict.Add wsBilling.Cells(i, 1).Value, rowData ' **未請求扱い**
+            ElseIf InStr(csvFileName, "henr") > 0 Then
+                assessmentDict.Add wsBilling.Cells(i, 1).Value, rowData ' **返戻・査定**
             End If
-        ElseIf InStr(csvFileName, "zogn") > 0 Then
-            unpaidDict.Add wsBilling.Cells(i, 1).Value, rowData ' 未請求扱い
-        ElseIf InStr(csvFileName, "henr") > 0 Then
-            assessmentDict.Add wsBilling.Cells(i, 1).Value, rowData ' 返戻・査定
         End If
     Next i
 
