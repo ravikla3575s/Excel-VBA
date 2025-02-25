@@ -11,7 +11,7 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
     Dim startRow As Long
     Dim dataDict As Object
     Dim rowData As Variant
-    Dim insertRows As Long
+    Dim a As Long, b As Long, c As Long
 
     ' シート設定
     Set wsDetails = newBook.Sheets(2) ' 詳細用シート
@@ -26,15 +26,17 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
 
     ' **開始行管理用 Dictionary 作成**
     Set startRowDict = CreateObject("Scripting.Dictionary")
-    startRowDict.Add "社保返戻再請求", GetStartRow(wsDetails, "社保返戻再請求")
-    startRowDict.Add "国保返戻再請求", GetStartRow(wsDetails, "国保返戻再請求")
-    startRowDict.Add "社保月遅れ請求", GetStartRow(wsDetails, "社保月遅れ請求")
-    startRowDict.Add "国保月遅れ請求", GetStartRow(wsDetails, "国保月遅れ請求")
-    startRowDict.Add "社保返戻・査定", GetStartRow(wsDetails, "社保返戻・査定")
-    startRowDict.Add "社保未請求扱い", GetStartRow(wsDetails, "社保未請求扱い")
-    startRowDict.Add "国保返戻・査定", GetStartRow(wsDetails, "国保返戻・査定")
-    startRowDict.Add "国保未請求扱い", GetStartRow(wsDetails, "国保未請求扱い")
-    startRowDict.Add "労災", lastRowDetails + 1 ' 労災は常に最終行の次
+    If payerType = "社保" Then
+        startRowDict.Add "返戻再請求", GetStartRow(wsDetails, "社保返戻再請求")
+        startRowDict.Add "月遅れ請求", GetStartRow(wsDetails, "社保月遅れ請求")
+        startRowDict.Add "返戻・査定", GetStartRow(wsDetails, "社保返戻・査定")
+        startRowDict.Add "未請求扱い", GetStartRow(wsDetails, "社保未請求扱い")
+    ElseIf payerType = "国保" Then
+        startRowDict.Add "返戻再請求", GetStartRow(wsDetails, "国保返戻再請求")
+        startRowDict.Add "月遅れ請求", GetStartRow(wsDetails, "国保月遅れ請求")
+        startRowDict.Add "返戻・査定", GetStartRow(wsDetails, "国保返戻・査定")
+        startRowDict.Add "未請求扱い", GetStartRow(wsDetails, "国保未請求扱い")
+    End If
 
     ' **区分ごとの Dictionary を作成**
     Set rebillDict = CreateObject("Scripting.Dictionary")   ' 返戻再請求
@@ -46,9 +48,9 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
 
     ' **請求データを Dictionary に格納**
     For i = 2 To lastRowBilling
-    dispensingMonth = wsBilling.Cells(i, 2).Value ' **GYYMM形式の診療月**
-    convertedMonth = ConvertToWesternDate(dispensingMonth)
-    rowData = Array(wsBilling.Cells(i, 4).Value, convertedMonth, wsBilling.Cells(i, 5).Value, wsBilling.Cells(i, 10).Value)
+        dispensingMonth = wsBilling.Cells(i, 2).Value ' **GYYMM形式の診療月**
+        convertedMonth = ConvertToWesternDate(dispensingMonth)
+        rowData = Array(wsBilling.Cells(i, 4).Value, convertedMonth, wsBilling.Cells(i, 5).Value, wsBilling.Cells(i, 10).Value)
 
         ' **現在処理中の診療月（csvYYMM）と異なる場合のみ追加**
         If Right(dispensingMonth, 4) <> csvYYMM Then
@@ -68,40 +70,46 @@ Sub TransferBillingDetails(newBook As Workbook, sheetName As String, csvFileName
         End If
     Next i
 
-    ' **件数に応じて行を追加**
-    insertRows = 0
-    If rebillDict.Count > 4 Then insertRows = insertRows + (rebillDict.Count - 4)
-    If lateDict.Count > 4 Then insertRows = insertRows + (lateDict.Count - 4)
-    If unpaidDict.Count > 4 Then insertRows = insertRows + (unpaidDict.Count - 4)
-    If assessmentDict.Count > 4 Then insertRows = insertRows + (assessmentDict.Count - 4)
+    ' **各カテゴリの追加行数を計算**
+    a = 0: b = 0: c = 0
+    If rebillDict.Count > 4 Then a = rebillDict.Count - 4
+    If lateDict.Count > 4 Then b = lateDict.Count - 4
+    If assessmentDict.Count > 4 Then c = assessmentDict.Count - 4
 
-    If insertRows > 0 Then
-        wsDetails.Rows(startRowDict("社保返戻再請求") + 1 & ":" & startRowDict("社保返戻再請求") + insertRows).Insert Shift:=xlDown
+    ' **各転記開始行の調整**
+    Dim lateStartRow As Long, assessmentStartRow As Long, unpaidStartRow As Long
 
-        ' 各区分の開始行を調整
-        IncreaseAllStartRows startRowDict, insertRows
+    lateStartRow = startRowDict("月遅れ請求") + 1 + a
+    assessmentStartRow = startRowDict("返戻・査定") + 1 + a + b
+    unpaidStartRow = startRowDict("未請求扱い") + 1 + a + b + c
+
+    ' **行を追加**
+    If a + b + c > 0 Then
+        wsDetails.Rows(lateStartRow & ":" & lateStartRow + a).Insert Shift:=xlDown
+        wsDetails.Rows(assessmentStartRow & ":" & assessmentStartRow + b).Insert Shift:=xlDown
+        wsDetails.Rows(unpaidStartRow & ":" & unpaidStartRow + c).Insert Shift:=xlDown
     End If
 
     ' **各 Dictionary の転記処理（空ならスキップ）**
     If rebillDict.Count > 0 Then
-        j = startRowDict("社保返戻再請求")
+        j = startRowDict("返戻再請求")
         Call TransferData(rebillDict, wsDetails, j, payerType)
     End If
 
     If lateDict.Count > 0 Then
-        j = startRowDict("社保月遅れ請求")
+        j = startRowDict("月遅れ請求")
         Call TransferData(lateDict, wsDetails, j, payerType)
     End If
 
     If unpaidDict.Count > 0 Then
-        j = startRowDict("社保未請求扱い")
+        j = startRowDict("未請求扱い")
         Call TransferData(unpaidDict, wsDetails, j, payerType)
     End If
 
     If assessmentDict.Count > 0 Then
-        j = startRowDict("社保返戻・査定")
+        j = startRowDict("返戻・査定")
         Call TransferData(assessmentDict, wsDetails, j, payerType)
     End If
 
-    MsgBox "データ転記が完了しました！", vbInformation, "処理完了"
+    MsgBox payerType & " のデータ転記が完了しました！", vbInformation, "処理完了"
 End Sub
