@@ -1,46 +1,28 @@
 Sub GetYearMonthFromFixf(fixfFile As String, ByRef targetYear As String, ByRef targetMonth As String)
     Dim fileName As String
-    Dim gyymm As String
-    Dim yearPart As Integer, monthPart As Integer
-    Dim era As String
-    Dim westernYear As Integer
-
-    ' **ファイル名を取得**
-    fileName = Dir(fixfFile) ' フルパスからファイル名のみ取得
+    Dim datePart As String
+    Dim yearPart As String, monthPart As String, dayPart As String
+    Dim hourPart As String, minPart As String, secPart As String
     
-    ' **GYYMMをファイル名の18～22桁目から取得（不足時は末尾5桁を使用）**
-    If Len(fileName) >= 22 Then
-        gyymm = Mid(fileName, 18, 5) ' **18～22桁目を取得**
-    Else
-        gyymm = Right(fileName, 5) ' **末尾5桁を取得**
-    End If
+    ' 【1】ファイル名を取得（フォルダパスを除く）
+    fileName = Mid(fixfFile, InStrRev(fixfFile, "\") + 1)
 
-    ' **和暦の元号を取得（1桁目）**
-    era = Left(gyymm, 1) ' **例: 5（令和）**
-    
-    ' **GYYMM から YYMM へ変換**
-    yearPart = CInt(Mid(gyymm, 2, 2)) ' **2桁の年**
-    monthPart = CInt(Right(gyymm, 2)) ' **2桁の月**
+    ' 【2】fixfファイルの日付部分を取得（後半部分）
+    ' 例: RTfixf1014123456720250228150730.csv → "20250228150730"
+    datePart = Mid(fileName, 18, 14)
 
-    ' **1月の場合は前年12月に修正**
-    If monthPart = 1 Then
-        monthPart = 12
-        yearPart = yearPart - 1
-    Else
-        monthPart = monthPart - 1
-    End If
+    ' 【3】年月日を分解
+    yearPart = Left(datePart, 4)    ' "2025"
+    monthPart = Mid(datePart, 5, 2) ' "02"
+    dayPart = Mid(datePart, 7, 2)   ' "28"
+    hourPart = Mid(datePart, 9, 2)  ' "15"
+    minPart = Mid(datePart, 11, 2)  ' "07"
+    secPart = Mid(datePart, 13, 2)  ' "30"
 
-    ' **和暦を西暦に変換**
-    Select Case era
-        Case "1": westernYear = 1867 + yearPart ' 明治
-        Case "2": westernYear = 1911 + yearPart ' 大正
-        Case "3": westernYear = 1925 + yearPart ' 昭和
-        Case "4": westernYear = 1988 + yearPart ' 平成
-        Case "5": westernYear = 2018 + yearPart ' 令和
-        Case Else: westernYear = 2000 ' 不明な場合はデフォルト値
-    End Select
+    ' 【4】取得した年と月を戻り値に設定
+    targetYear = yearPart  ' 西暦のまま
+    targetMonth = monthPart ' 2桁の月
 
-    ' **取得した診療年月をセット**
-    targetYear = CStr(westernYear)
-    targetMonth = Format(monthPart, "00")
+    ' **確認用ログ（必要なら表示）**
+    ' MsgBox "診療年月取得: " & targetYear & "年 " & targetMonth & "月 " & dayPart & "日 " & hourPart & ":" & minPart & ":" & secPart, vbInformation, "確認"
 End Sub
