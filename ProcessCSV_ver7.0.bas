@@ -177,7 +177,7 @@ Sub ProcessCSV()
                 GoTo NextFixf
             End If
             Application.DisplayAlerts = False
-            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbook
+            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbookMacroEnabled
             Application.DisplayAlerts = True
             newWb.Close False
         End If
@@ -200,7 +200,7 @@ Sub ProcessCSV()
         reportWb.Save
         reportWb.Close False
 
-NextFixf:
+    NextFixf:
         ' 次のfixfファイルへループ継続
     Next fileObj
 
@@ -252,7 +252,7 @@ NextFixf:
                 GoTo NextFmei
             End If
             Application.DisplayAlerts = False
-            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbook
+            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbookMacroEnabled
             Application.DisplayAlerts = True
             newWb.Close False
         End If
@@ -278,7 +278,7 @@ NextFixf:
         reportWb.Save
         reportWb.Close False
 
-NextFmei:
+    NextFmei:
         ' 次のfmeiファイルへループ継続
     Next fileObj
 
@@ -328,7 +328,7 @@ NextFmei:
                 GoTo NextHenr
             End If
             Application.DisplayAlerts = False
-            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbook
+            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbookMacroEnabled
             Application.DisplayAlerts = True
             newWb.Close False
         End If
@@ -353,7 +353,7 @@ NextFmei:
         reportWb.Save
         reportWb.Close False
 
-NextHenr:
+    NextHenr:
         ' 次のhenrファイルへループ継続
     Next fileObj
 
@@ -403,7 +403,7 @@ NextHenr:
                 GoTo NextZogn
             End If
             Application.DisplayAlerts = False
-            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbook
+            newWb.SaveAs Filename:=reportFilePath, FileFormat:=xlOpenXMLWorkbookMacroEnabled
             Application.DisplayAlerts = True
             newWb.Close False
         End If
@@ -428,7 +428,7 @@ NextHenr:
         reportWb.Save
         reportWb.Close False
 
-NextZogn:
+    NextZogn:
         ' 次のzognファイルへループ継続
     Next fileObj
 
@@ -708,7 +708,7 @@ Function FindOrCreateReport(savePath As String, targetYear As String, targetMont
             Exit Function
         End If
         Application.DisplayAlerts = False
-        newWb.SaveAs Filename:=reportPath, FileFormat:=xlOpenXMLWorkbook
+        newWb.SaveAs Filename:=reportPath, FileFormat:=xlOpenXMLWorkbookMacroEnabled
         Application.DisplayAlerts = True
         newWb.Close False
     End If
