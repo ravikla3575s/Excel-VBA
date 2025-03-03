@@ -243,7 +243,7 @@ NextFixf:
         End If
         eraYearCode = Format(eraYear, "00")
         GYYMM = eraCode & eraYearCode & targetMonth
-        reportFileName = "保険請求管理報告書_R" & GYYMM & ".xlsx"
+        reportFileName = "保険請求管理報告書_" & GYYMM & ".xlsm"
         reportFilePath = savePath & "\" & reportFileName
         If Not fso.FileExists(reportFilePath) Then
             Set newWb = Workbooks.Add(templatePath)
@@ -319,7 +319,7 @@ NextFmei:
         End If
         eraYearCode = Format(eraYear, "00")
         GYYMM = eraCode & eraYearCode & targetMonth
-        reportFileName = "保険請求管理報告書_R" & GYYMM & ".xlsx"
+        reportFileName = "保険請求管理報告書_" & GYYMM & ".xlsm"
         reportFilePath = savePath & "\" & reportFileName
         If Not fso.FileExists(reportFilePath) Then
             Set newWb = Workbooks.Add(templatePath)
@@ -394,7 +394,7 @@ NextHenr:
         End If
         eraYearCode = Format(eraYear, "00")
         GYYMM = eraCode & eraYearCode & targetMonth
-        reportFileName = "保険請求管理報告書_R" & GYYMM & ".xlsx"
+        reportFileName = "保険請求管理報告書_" & GYYMM & ".xlsm"
         reportFilePath = savePath & "\" & reportFileName
         If Not fso.FileExists(reportFilePath) Then
             Set newWb = Workbooks.Add(templatePath)
@@ -562,6 +562,18 @@ Sub ProcessAllCSVFiles(fso As Object, reportWb As Workbook, csvFolder As String,
     ProcessZognFiles fso, reportWb, zognFiles
 End Sub
 
+Function ConvertToCircledNumber(month As Integer) As String
+    Dim circledNumbers As Variant
+    circledNumbers = Array("①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫")
+
+    ' **1～12月の範囲内なら変換、範囲外ならそのまま返す**
+    If month >= 1 And month <= 12 Then
+        ConvertToCircledNumber = circledNumbers(month - 1)
+    Else
+        ConvertToCircledNumber = CStr(month) ' 予期しない値ならそのまま
+    End If
+End Function
+
 Sub ProcessFmeiFiles(fso As Object, reportWb As Workbook, fmeiFiles As Collection)
     Dim csvFileObj As Object, wsCSV As Worksheet
     Dim sheetName As String, insertIndex As Integer
@@ -643,7 +655,7 @@ Function IsFolderEmpty(folderPath As String) As Boolean
 End Function
 
 Function GetTemplatePath() As String
-    GetTemplatePath = ThisWorkbook.Sheets(1).Range("B2").Value & "\保険請求管理報告書テンプレート.xltm"
+    GetTemplatePath = ThisWorkbook.Sheets(1).Range("B2").Value & "\保険請求管理報告書テンプレート20250222.xltm"
 End Function
 
 Function GetSavePath() As String
@@ -685,7 +697,7 @@ Function FindOrCreateReport(savePath As String, targetYear As String, targetMont
         eraYear = CInt(targetYear) - 1867
     End If
     csvYYMM = eraCode & Format(eraYear, "00") & targetMonth  ' RYYMM文字列
-    reportName = "保険請求管理報告書_R" & csvYYMM & ".xlsx"
+    reportName = "保険請求管理報告書_" & csvYYMM & ".xlsm"
     reportPath = savePath & "\" & reportName
     If Not fso.FileExists(reportPath) Then
         On Error Resume Next
@@ -707,14 +719,35 @@ Function FindOrCreateReport(savePath As String, targetYear As String, targetMont
     End If
 End Function
 
-Sub SetTemplateInfo(reportWb As Workbook, targetYear As String, targetMonth As String)
-    ' 報告書ブック内のシート名やタイトルセルを診療年月に合わせて更新する処理。
-    ' （具体的な実装はテンプレート構造による。必要に応じてシート名変更や見出し行の置換などを行う）
-    Dim titleSheet As Worksheet
-    Set titleSheet = reportWb.Sheets(1)
-    ' 例: シート1のA1セルに「令和○年○月請求分報告書」等のタイトルがある場合
-    titleSheet.Range("A1").Value = "保険請求管理報告書 " & targetYear & "年" & CInt(targetMonth) & "月分"
-    ' （※実際のテンプレートに応じて適宜調整）
+Sub SetTemplateInfo(newBook As Workbook, targetYear As String, targetMonth As String)
+    Dim wsTemplate As Worksheet, wsTemplate2 As Worksheet
+    Dim receiptYear As Integer, receiptMonth As Integer
+    Dim sendMonth As Integer, sendDate As String
+
+    ' **西暦年と調剤月の計算**
+    receiptYear = CInt(targetYear)
+    receiptMonth = CInt(targetMonth)
+
+    ' **請求月の計算**
+    sendMonth = receiptMonth + 1
+    If sendMonth = 13 Then sendMonth = 1
+    sendDate = sendMonth & "月10日請求分"
+
+    ' **シートA, Bを取得**
+    Set wsTemplate = newBook.Sheets("A")
+    Set wsTemplate2 = newBook.Sheets("B")
+
+    ' **シート名変更**
+    wsTemplate.Name = "R" & (receiptYear - 2018) & "." & receiptMonth
+    wsTemplate2.Name = ConvertToCircledNumber(receiptMonth)
+
+    ' **情報転記**
+    wsTemplate.Range("G2").Value = targetYear & "年" & targetMonth & "月調剤分"
+    wsTemplate.Range("I2").Value = sendDate
+    wsTemplate.Range("J2").Value = ThisWorkbook.Sheets(1).Range("B1").Value
+    wsTemplate2.Range("H1").Value = targetYear & "年" & targetMonth & "月調剤分"
+    wsTemplate2.Range("J1").Value = sendDate
+    wsTemplate2.Range("L1").Value = ThisWorkbook.Sheets(1).Range("B1").Value
 End Sub
 
 Sub GetYearMonthFromFixf(fixfFilePath As String, ByRef targetYear As String, ByRef targetMonth As String)
@@ -1168,7 +1201,7 @@ Sub InvestigateHalfYearDiscrepancy()
             eraCode = "1": eraYear = yearNum - 1867   ' 明治
         End If
         eraYY = Format(eraYear, "00")
-        fileName = "保険請求管理報告書_R" & eraYY & Format(m, "00") & ".xlsx"
+        fileName = "保険請求管理報告書_" & eraYY & Format(m, "00") & ".xlsm"
         filePath = folderPath & "\" & fileName
 
         If fso.FileExists(filePath) Then
