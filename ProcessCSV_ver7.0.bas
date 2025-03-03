@@ -166,7 +166,7 @@ Sub ProcessCSV()
         End If
         eraYearCode = Format(eraYear, "00")
         GYYMM = eraCode & eraYearCode & targetMonth
-        reportFileName = "保険請求管理報告書_R" & GYYMM & ".xlsx"
+        reportFileName = "保険請求管理報告書_" & GYYMM & ".xlsm"
         reportFilePath = savePath & "\" & reportFileName
 
         ' 8. 報告書Excelブックを取得（存在しなければテンプレートから新規作成）
